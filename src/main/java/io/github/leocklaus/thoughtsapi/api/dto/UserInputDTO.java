@@ -1,11 +1,9 @@
 package io.github.leocklaus.thoughtsapi.api.dto;
 
 import io.github.leocklaus.thoughtsapi.domain.models.User;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class UserInputDTO {
 
     private Long id;
