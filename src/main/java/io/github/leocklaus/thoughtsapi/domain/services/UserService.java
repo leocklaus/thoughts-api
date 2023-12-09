@@ -45,7 +45,7 @@ public class UserService {
         return new UserOutputDTO(user);
     }
 
-    private void updateUserPassword(Long id, UserPasswordDTO dto){
+    public void updateUserPassword(Long id, UserPasswordDTO dto){
         User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
 
         if(user.getPassword().equals(dto.getCurrentPassword())){
@@ -54,6 +54,11 @@ public class UserService {
             throw new UserWrongPasswordException();
         }
 
+    }
+
+    public void deleteUser(Long id) {
+        User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
+        repository.delete(user);
     }
 
     private User getUserByIdOrThrowsExceptionIfUserNotExists(Long id){

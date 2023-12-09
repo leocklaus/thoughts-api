@@ -2,6 +2,7 @@ package io.github.leocklaus.thoughtsapi.api.controllers;
 
 import io.github.leocklaus.thoughtsapi.api.dto.UserInputDTO;
 import io.github.leocklaus.thoughtsapi.api.dto.UserOutputDTO;
+import io.github.leocklaus.thoughtsapi.api.dto.UserPasswordDTO;
 import io.github.leocklaus.thoughtsapi.domain.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -40,4 +41,19 @@ public class UserController {
 
         return ResponseEntity.created(uri).body(user);
     }
+
+    @PutMapping("/{id}/updatepassword")
+    public ResponseEntity<Void> updatePassword(@PathVariable Long id, @RequestBody UserPasswordDTO dto){
+        userService.updateUserPassword(id, dto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserOutputDTO> updateUser(@PathVariable Long id, @RequestBody UserInputDTO dto){
+        UserOutputDTO user = userService.updateUser(dto, id);
+        return ResponseEntity.ok(user);
+    }
+
+
+
 }
