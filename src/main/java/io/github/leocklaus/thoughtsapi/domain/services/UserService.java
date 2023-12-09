@@ -41,6 +41,8 @@ public class UserService {
     public UserOutputDTO updateUser(UserInputDTO dto, Long id) {
         User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
         user = fromDTOToUser(dto, user);
+        user = repository.save(user);
+        return new UserOutputDTO(user);
     }
 
     private void updateUserPassword(Long id, UserPasswordDTO dto){
