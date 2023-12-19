@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class UserService {
@@ -33,7 +32,7 @@ public class UserService {
 
     public UserOutputDTO saveUser(UserInputDTO dto) {
         User user = new User(dto);
-        setPasswordHashAndUUID(user);
+        setPasswordHash(user);
         user = repository.save(user);
         return new UserOutputDTO(user);
     }
@@ -79,12 +78,6 @@ public class UserService {
         return user;
     }
 
-    private void setPasswordHashAndUUID(User user){
-        user.setUuid(generateUUID());
-    }
+    private void setPasswordHash(User user){    }
 
-    private String generateUUID(){
-        String uuid = UUID.randomUUID().toString();
-        return uuid;
-    }
 }

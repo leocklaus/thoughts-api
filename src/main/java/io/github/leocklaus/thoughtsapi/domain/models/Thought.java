@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -35,6 +36,11 @@ public class Thought {
         this.type = dto.getType();
         this.originalThoughtId = dto.getOriginalThoughtId();
         this.createdAt = dto.getCreatedAt();
+    }
+
+    @PrePersist
+    public void generateUUID(){
+        setUuid(UUID.randomUUID().toString());
     }
 
 }

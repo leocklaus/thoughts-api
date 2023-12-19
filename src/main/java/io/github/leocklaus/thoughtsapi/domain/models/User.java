@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+import java.util.UUID;
+
 
 @Entity
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -27,6 +30,7 @@ public class User {
     private String birthday;
     @Column(nullable = false)
     private String password;
+    private List<Thought> thoughts;
 
     public User(UserInputDTO dto){
         this.id = dto.getId();
@@ -37,5 +41,10 @@ public class User {
         this.lastName = dto.getLastName();
         this.birthday = dto.getBirthday();
         this.password = dto.getPassword();
+    }
+
+    @PrePersist
+    public void generateCode(){
+        setUuid(UUID.randomUUID().toString());
     }
 }
