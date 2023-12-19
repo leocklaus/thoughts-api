@@ -1,10 +1,14 @@
 package io.github.leocklaus.thoughtsapi.api.controllers;
 
+import io.github.leocklaus.thoughtsapi.api.dto.ThoughtDTO;
 import io.github.leocklaus.thoughtsapi.api.dto.UserInputDTO;
 import io.github.leocklaus.thoughtsapi.api.dto.UserOutputDTO;
 import io.github.leocklaus.thoughtsapi.api.dto.UserPasswordDTO;
+import io.github.leocklaus.thoughtsapi.domain.services.ThoughtService;
 import io.github.leocklaus.thoughtsapi.domain.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -18,6 +22,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ThoughtService thoughtService;
 
     @GetMapping
     public ResponseEntity<List<UserOutputDTO>> getAll(){
@@ -53,6 +60,22 @@ public class UserController {
         UserOutputDTO user = userService.updateUser(dto, id);
         return ResponseEntity.ok(user);
     }
+
+    @GetMapping("/current/details")
+    public ResponseEntity<UserOutputDTO> getCurrentUserDetails(){
+        //TODO: GET USER ID VIA JWT
+        Long currentUserId = 1L;
+        UserOutputDTO user = userService.getUserById(currentUserId);
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/current/thoughts")
+    public ResponseEntity<Page<ThoughtDTO>> getCurrentUserThoughts(Pageable pageable){
+        //TODO: GET USER ID VIA JWT
+        Long currentUserId = 1L;
+        return null;
+    }
+
 
 
 
