@@ -17,6 +17,12 @@ public class Follower {
     private Long userId;
     @Column(nullable = false)
     private Long followerId;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private User followed;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private User follower;
 
     public Follower(FollowerDTO dto){
         this.id = dto.getId();

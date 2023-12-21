@@ -7,6 +7,7 @@ import io.github.leocklaus.thoughtsapi.domain.exceptions.UserNotFoundException;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.UserWrongPasswordException;
 import io.github.leocklaus.thoughtsapi.domain.models.User;
 import io.github.leocklaus.thoughtsapi.domain.repositories.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,7 @@ public class UserService {
         return new UserOutputDTO(user);
     }
 
+    @Transactional
     public UserOutputDTO saveUser(UserInputDTO dto) {
         User user = new User(dto);
         setPasswordHash(user);
@@ -37,6 +39,7 @@ public class UserService {
         return new UserOutputDTO(user);
     }
 
+    @Transactional
     public UserOutputDTO updateUser(UserInputDTO dto, Long id) {
         User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
         user = fromDTOToUser(dto, user);
@@ -44,6 +47,7 @@ public class UserService {
         return new UserOutputDTO(user);
     }
 
+    @Transactional
     public void updateUserPassword(Long id, UserPasswordDTO dto){
         User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
 
@@ -55,12 +59,13 @@ public class UserService {
 
     }
 
+    @Transactional
     public void deleteUser(Long id) {
         User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
         repository.delete(user);
     }
 
-    private User getUserByIdOrThrowsExceptionIfUserNotExists(Long id){
+    public User getUserByIdOrThrowsExceptionIfUserNotExists(Long id){
         User user = repository.findById(id)
                 .orElseThrow(()-> new UserNotFoundException(id));
         return user;

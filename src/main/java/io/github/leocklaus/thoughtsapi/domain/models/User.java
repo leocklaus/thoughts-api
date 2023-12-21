@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +31,8 @@ public class User {
     private String birthday;
     @Column(nullable = false)
     private String password;
-    private List<Thought> thoughts;
+    @OneToMany(mappedBy = "user")
+    private List<Thought> thoughts = new ArrayList<>();
 
     public User(UserInputDTO dto){
         this.id = dto.getId();

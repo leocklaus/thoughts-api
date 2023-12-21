@@ -17,6 +17,12 @@ public class Like {
     private Long thoughtId;
     @Column(nullable = false)
     private Long userId;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Thought thought;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private User user;
 
     public Like(LikeDTO dto){
         this.id = dto.getId();

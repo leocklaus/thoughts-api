@@ -7,6 +7,8 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -18,23 +20,26 @@ public class Thought {
     @EqualsAndHashCode.Include
     private Long id;
     private String uuid;
-    @Column(nullable = false)
-    private Long userId;
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
     @Column(nullable = false)
     private ThoughtType type;
-    private Long originalThoughtId;
     @CreationTimestamp
     private LocalDateTime createdAt;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private User user;
+    @OneToOne
+    @JoinColumn(name = "originalThought")
+    private Thought originalThought;
+    @OneToMany(mappedBy = "thought")
+    private List<Like> likes = new ArrayList<>();
 
     public Thought(ThoughtDTO dto){
         this.id = dto.getId();
         this.uuid = dto.getUuid();
-        this.userId = dto.getUserId();
         this.content = dto.getContent();
         this.type = dto.getType();
-        this.originalThoughtId = dto.getOriginalThoughtId();
         this.createdAt = dto.getCreatedAt();
     }
 
