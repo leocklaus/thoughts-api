@@ -1,7 +1,11 @@
 package io.github.leocklaus.thoughtsapi.api.controllers;
 
 import io.github.leocklaus.thoughtsapi.api.dto.ThoughtDTO;
+import io.github.leocklaus.thoughtsapi.api.dto.ThoughtOutputDTO;
+import io.github.leocklaus.thoughtsapi.api.dto.ThoughtOutputDTOProjected;
+import io.github.leocklaus.thoughtsapi.domain.projections.ThoughtProjection;
 import io.github.leocklaus.thoughtsapi.domain.services.ThoughtService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,28 +24,50 @@ public class ThoughtsController {
     @Autowired
     private ThoughtService thoughtService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ThoughtDTO> getThoughtById(@PathVariable Long id){
-        ThoughtDTO thoughtDTO = thoughtService.getThoughtById(id);
+    @GetMapping("/{uuid}")
+    public ResponseEntity<ThoughtOutputDTO> getThoughtByUuid(@PathVariable String uuid){
+        ThoughtOutputDTO thoughtDTO = thoughtService.getThoughtByUuid(uuid);
         return ResponseEntity.ok(thoughtDTO);
     }
 
     @GetMapping
-    public ResponseEntity<Page<ThoughtDTO>> getAllThoughtsPaged(
-            @PageableDefault(size = 20, direction = Sort.Direction.DESC) Pageable pageable){
-        Page<ThoughtDTO> thoughts = thoughtService.getAllThoughtsPaged(pageable);
+    public ResponseEntity<Page<ThoughtProjection>> getAllThoughtsPaged(
+            @PageableDefault(size = 20, direction = Sort.Direction.DESC, sort = {"created_at"}) Pageable pageable){
+        Page<ThoughtProjection> thoughts = thoughtService.getAllThoughtsPaged(pageable);
         return ResponseEntity.ok(thoughts);
     }
 
     @PostMapping
-    public ResponseEntity<ThoughtDTO> saveThought(@RequestBody ThoughtDTO dto){
-        ThoughtDTO thought = thoughtService.saveThought(dto);
+    public ResponseEntity<ThoughtOutputDTO> saveThought(@RequestBody ThoughtDTO dto){
+        ThoughtOutputDTO thought = thoughtService.saveThought(dto);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
-                .buildAndExpand(thought.getId()).toUri();
+                .buildAndExpand(thought.getUuid()).toUri();
 
         return ResponseEntity.created(uri).body(thought);
+    }
+
+    @GetMapping("/{uuid}/comments")
+    public ResponseEntity<Page<ThoughtOutputDTO>> getThoughComments(
+            @PathVariable String uuid,
+            @PageableDefault(size = 10, direction = Sort.Direction.DESC, sort = {"createdAt"}) Pageable pageable){
+        Page<ThoughtOutputDTO> comments = thoughtService.getCommentsByThoughtUuid(pageable, uuid);
+        return ResponseEntity.ok(comments);
+    }
+
+    @Transactional
+    @PutMapping("/{uuid}/like")
+    public ResponseEntity<?> addLikeToThought(@PathVariable String uuid){
+        thoughtService.addLikeToThought(uuid);
+        return ResponseEntity.ok().build();
+    }
+
+    @Transactional
+    @DeleteMapping("/{uuid}/like")
+    public ResponseEntity<?> deleteLike(@PathVariable String uuid){
+        thoughtService.deleteLike(uuid);
+        return ResponseEntity.ok().build();
     }
 
 
