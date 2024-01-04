@@ -3,6 +3,9 @@ package io.github.leocklaus.thoughtsapi.api.exceptionhandler;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.ThoughtNotFoundException;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.UserNotFoundException;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.UserWrongPasswordException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -21,6 +24,9 @@ import java.util.List;
 
 @ControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @Autowired
+    private MessageSource messageSource;
 
     public static final String GENERIC_ERROR_MESSAGE
             = "Ocorreu um erro interno inesperado no sistema. Tente novamente e se "
@@ -72,9 +78,10 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
         errors = bindingResult.getFieldErrors().stream()
                 .map(error -> {
+                    String message = messageSource.getMessage(error, LocaleContextHolder.getLocale());
                     return ExceptionModel.Object.builder()
                             .name(error.getField())
-                            .userMessage(error.getDefaultMessage())
+                            .userMessage(message)
                             .build();
                 }).toList();
 
