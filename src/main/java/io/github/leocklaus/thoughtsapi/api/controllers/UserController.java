@@ -1,14 +1,14 @@
 package io.github.leocklaus.thoughtsapi.api.controllers;
 
-import io.github.leocklaus.thoughtsapi.api.dto.ThoughtDTO;
-import io.github.leocklaus.thoughtsapi.api.dto.UserInputDTO;
-import io.github.leocklaus.thoughtsapi.api.dto.UserOutputDTO;
-import io.github.leocklaus.thoughtsapi.api.dto.UserPasswordDTO;
+import io.github.leocklaus.thoughtsapi.api.dto.*;
+import io.github.leocklaus.thoughtsapi.domain.projections.ThoughtProjection;
 import io.github.leocklaus.thoughtsapi.domain.services.ThoughtService;
 import io.github.leocklaus.thoughtsapi.domain.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -32,9 +32,9 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserOutputDTO> getUserById(@PathVariable Long id){
-        UserOutputDTO user = userService.getUserById(id);
+    @GetMapping("/{uuid}")
+    public ResponseEntity<UserOutputDTO> getUserById(@PathVariable String uuid){
+        UserOutputDTO user = userService.getUserByUuid(uuid);
         return ResponseEntity.ok(user);
     }
 
@@ -69,13 +69,39 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping("/current/thoughts")
-    public ResponseEntity<Page<ThoughtDTO>> getCurrentUserThoughts(Pageable pageable){
-        //TODO: GET USER ID VIA JWT
-        Long currentUserId = 1L;
-        return null;
+    @GetMapping("/current/likes")
+    public ResponseEntity<Page<ThoughtProjection>> getThoughtsLikedByUSer(
+            @PageableDefault(size = 20, direction = Sort.Direction.DESC, sort = {"likeDate"}) Pageable pageable){
+        Page<ThoughtProjection> thoughtsProjection = thoughtService.getThoughtsLikedByUser(pageable);
+        return ResponseEntity.ok(thoughtsProjection);
     }
 
+    @GetMapping("/current/replies")
+    public ResponseEntity<Page<ThoughtProjection>> getUserReplies(
+            @PageableDefault(size = 20, direction = Sort.Direction.DESC, sort = {"createdAt"}) Pageable pageable){
+        Page<ThoughtProjection> replies = thoughtService.getUserReplies(pageable);
+        return ResponseEntity.ok(replies);
+    }
+
+    @GetMapping("/current/thoughts")
+    public ResponseEntity<Page<ThoughtProjection>> getCurrentUserThoughts(
+            @PageableDefault(size = 20, direction = Sort.Direction.DESC, sort = {"createdAt"}) Pageable pageable){
+
+        Page<ThoughtProjection> replies = thoughtService.getUserThoughts(pageable);
+        return ResponseEntity.ok(replies);
+    }
+
+    @PutMapping("/follow/{userToFollowUuid}")
+    public ResponseEntity<?> addFollower(@PathVariable String userToFollowUuid){
+        userService.followUser(userToFollowUuid);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/follow/{userToUnfollowUuid}")
+    public ResponseEntity<?> removeFollower(@PathVariable String userToUnfollowUuid){
+        userService.unfollowUser(userToUnfollowUuid);
+        return ResponseEntity.noContent().build();
+    }
 
 
 
