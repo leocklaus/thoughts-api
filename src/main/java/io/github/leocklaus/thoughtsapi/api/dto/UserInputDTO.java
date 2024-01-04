@@ -1,9 +1,13 @@
 package io.github.leocklaus.thoughtsapi.api.dto;
 
 import io.github.leocklaus.thoughtsapi.domain.models.User;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserInputDTO {
 
     private Long id;
