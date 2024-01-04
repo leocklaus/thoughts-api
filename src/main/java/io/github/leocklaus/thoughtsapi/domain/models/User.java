@@ -2,8 +2,10 @@ package io.github.leocklaus.thoughtsapi.domain.models;
 
 import io.github.leocklaus.thoughtsapi.api.dto.UserInputDTO;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,9 @@ import java.util.UUID;
 @Entity
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "tb_user")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,8 +36,6 @@ public class User {
     private String birthday;
     @Column(nullable = false)
     private String password;
-    @OneToMany(mappedBy = "user")
-    private List<Thought> thoughts = new ArrayList<>();
 
     public User(UserInputDTO dto){
         this.id = dto.getId();
