@@ -6,6 +6,7 @@ import io.github.leocklaus.thoughtsapi.api.dto.ThoughtOutputDTOProjected;
 import io.github.leocklaus.thoughtsapi.domain.projections.ThoughtProjection;
 import io.github.leocklaus.thoughtsapi.domain.services.ThoughtService;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +39,7 @@ public class ThoughtsController {
     }
 
     @PostMapping
-    public ResponseEntity<ThoughtOutputDTO> saveThought(@RequestBody ThoughtDTO dto){
+    public ResponseEntity<ThoughtOutputDTO> saveThought(@RequestBody @Valid ThoughtDTO dto){
         ThoughtOutputDTO thought = thoughtService.saveThought(dto);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri()
