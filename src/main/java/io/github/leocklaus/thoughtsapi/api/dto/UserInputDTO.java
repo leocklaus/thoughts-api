@@ -21,7 +21,7 @@ public class UserInputDTO {
     private String firstName;
     @NotBlank
     private String lastName;
-    @NotBlank @Past
+    @NotBlank
     private String birthday;
     @NotBlank @Size(min = 6)
     private String password;
