@@ -4,6 +4,7 @@ import io.github.leocklaus.thoughtsapi.api.dto.*;
 import io.github.leocklaus.thoughtsapi.domain.projections.ThoughtProjection;
 import io.github.leocklaus.thoughtsapi.domain.services.ThoughtService;
 import io.github.leocklaus.thoughtsapi.domain.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +40,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserOutputDTO> saveUser(@RequestBody UserInputDTO dto){
+    public ResponseEntity<UserOutputDTO> saveUser(@RequestBody @Valid UserInputDTO dto){
         UserOutputDTO user = userService.saveUser(dto);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri()
@@ -50,13 +51,13 @@ public class UserController {
     }
 
     @PutMapping("/{id}/updatepassword")
-    public ResponseEntity<Void> updatePassword(@PathVariable Long id, @RequestBody UserPasswordDTO dto){
+    public ResponseEntity<Void> updatePassword(@PathVariable Long id, @RequestBody @Valid UserPasswordDTO dto){
         userService.updateUserPassword(id, dto);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserOutputDTO> updateUser(@PathVariable Long id, @RequestBody UserInputDTO dto){
+    public ResponseEntity<UserOutputDTO> updateUser(@PathVariable Long id, @RequestBody @Valid UserInputDTO dto){
         UserOutputDTO user = userService.updateUser(dto, id);
         return ResponseEntity.ok(user);
     }
