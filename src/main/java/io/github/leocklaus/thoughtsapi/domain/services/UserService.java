@@ -5,19 +5,25 @@ import io.github.leocklaus.thoughtsapi.api.dto.UserOutputDTO;
 import io.github.leocklaus.thoughtsapi.api.dto.UserPasswordDTO;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.UserNotFoundException;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.UserWrongPasswordException;
+import io.github.leocklaus.thoughtsapi.domain.models.Follower;
 import io.github.leocklaus.thoughtsapi.domain.models.User;
+import io.github.leocklaus.thoughtsapi.domain.repositories.FollowerRepository;
 import io.github.leocklaus.thoughtsapi.domain.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository repository;
+
+    @Autowired
+    private FollowerRepository followerRepository;
 
     public List<UserOutputDTO> getAllUsers() {
         List<User> users = repository.findAll();
@@ -29,6 +35,16 @@ public class UserService {
     public UserOutputDTO getUserById(Long id) {
         User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
         return new UserOutputDTO(user);
+    }
+
+    public UserOutputDTO getUserByUuid(String uuid) {
+        User user = getUserByUuidOrThrowsExceptionIfUserNotExists(uuid);
+        Long follows = followerRepository.countByFollower(user);
+        Long followed = followerRepository.countByFollowed(user);
+        UserOutputDTO userDTO = new UserOutputDTO(user);
+        userDTO.setFollows(follows);
+        userDTO.setFollowers(followed);
+        return userDTO;
     }
 
     @Transactional
@@ -71,6 +87,12 @@ public class UserService {
         return user;
     }
 
+    public User getUserByUuidOrThrowsExceptionIfUserNotExists(String uuid){
+        User user = repository.findByUuid(uuid)
+                .orElseThrow(()-> new UserNotFoundException("Usuário não econtrado com a id: " + uuid));
+        return user;
+    }
+
 
     private User fromDTOToUser(UserInputDTO dto, User user) {
         user.setId(dto.getId());
@@ -85,4 +107,37 @@ public class UserService {
 
     private void setPasswordHash(User user){    }
 
+    @Transactional
+    public void followUser(String userToFollowUuid) {
+        Long userId = getLoggedUserId();
+        User user = getUserByIdOrThrowsExceptionIfUserNotExists(userId);
+        User userToFollow = getUserByUuidOrThrowsExceptionIfUserNotExists(userToFollowUuid);
+        if(!isAlreadyFollowing(user, userToFollow)){
+            Follower follower = new Follower(null, userToFollow, user);
+            followerRepository.save(follower);
+        }
+    }
+
+    @Transactional
+    public void unfollowUser(String userBeingFollowedUUID) {
+        Long userId = getLoggedUserId();
+        User user = getUserByIdOrThrowsExceptionIfUserNotExists(userId);
+        User userBeingFollowed = getUserByUuidOrThrowsExceptionIfUserNotExists(userBeingFollowedUUID);
+        if(isAlreadyFollowing(user, userBeingFollowed)){
+            followerRepository.deleteByFollowedAndFollower(userBeingFollowed, user);
+        }
+    }
+
+    private Optional<Follower> getFollow(User user, User userToBeFollowed){
+        Optional<Follower> follower = followerRepository.findByFollowedAndFollower(userToBeFollowed, user);
+        return follower;
+    }
+
+    private boolean isAlreadyFollowing(User user, User userToBeFollowed){
+        return getFollow(user,userToBeFollowed).isPresent()? true: false;
+    }
+
+    private Long getLoggedUserId(){
+        return 1L;
+    }
 }

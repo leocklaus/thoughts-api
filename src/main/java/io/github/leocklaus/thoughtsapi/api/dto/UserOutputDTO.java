@@ -1,9 +1,13 @@
 package io.github.leocklaus.thoughtsapi.api.dto;
 
 import io.github.leocklaus.thoughtsapi.domain.models.User;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserOutputDTO {
 
     private Long id;
@@ -13,6 +17,8 @@ public class UserOutputDTO {
     private String firstName;
     private String lastName;
     private String birthday;
+    private Long follows;
+    private Long followers;
 
     public UserOutputDTO(User user){
         this.id = user.getId();
