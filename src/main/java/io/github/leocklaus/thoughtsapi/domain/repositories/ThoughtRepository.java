@@ -20,8 +20,9 @@ public interface ThoughtRepository extends JpaRepository<Thought, Long> {
     Optional<Thought> findByUuid(String uuid);
     Page<Thought> findByOriginalThought(Thought originalThought, Pageable pageable);
 
-    @Query(value = "SELECT uuid, type, created_at as createdAt, content, user_id as userId, COALESCE(r.comments_count, 0) commentsCount, COALESCE(l.likes_count, 0) likesCount\n" +
+    @Query(value = "SELECT t.uuid, t.type, t.created_at as createdAt, t.content, u.uuid as userUUID, u.username as username, u.first_name as firstName, u.last_name as lastName, COALESCE(r.comments_count, 0) commentsCount, COALESCE(l.likes_count, 0) likesCount\n" +
             "FROM thought t\n" +
+            "LEFT JOIN tb_user u ON u.id = t.user_id\n" +
             "LEFT JOIN (\n" +
             "    SELECT original_thought , COUNT(*) comments_count\n" +
             "    FROM thought\n" +
@@ -36,8 +37,9 @@ public interface ThoughtRepository extends JpaRepository<Thought, Long> {
             nativeQuery = true)
     Page<ThoughtProjection> findByUserAndType(@Param("userId") Long userId, @Param("type") String type, Pageable pageable);
 
-    @Query(value = "SELECT uuid, type, created_at as createdAt, content, user_id as userId, COALESCE(r.comments_count, 0) commentsCount, COALESCE(l.likes_count, 0) likesCount\n" +
+    @Query(value = "SELECT t.uuid, t.type, t.created_at as createdAt, t.content, u.uuid as userUUID, u.username as username, u.first_name as firstName, u.last_name as lastName, COALESCE(r.comments_count, 0) commentsCount, COALESCE(l.likes_count, 0) likesCount\n" +
             "FROM thought t\n" +
+            "LEFT JOIN tb_user u ON u.id = t.user_id\n" +
             "LEFT JOIN (\n" +
             "    SELECT original_thought , COUNT(*) comments_count\n" +
             "    FROM thought\n" +
@@ -51,8 +53,9 @@ public interface ThoughtRepository extends JpaRepository<Thought, Long> {
             nativeQuery = true)
     Page<ThoughtProjection> getThoughtsPaged(Pageable pageable);
 
-    @Query(value = "SELECT uuid, type, created_at as createdAt, content, user_id as userId, COALESCE(r.comments_count, 0) commentsCount, COALESCE(l.likes_count, 0) likesCount\n" +
+    @Query(value = "SELECT t.uuid, t.type, t.created_at as createdAt, t.content,u.uuid as userUUID, u.username as username, u.first_name as firstName, u.last_name as lastName, COALESCE(r.comments_count, 0) commentsCount, COALESCE(l.likes_count, 0) likesCount\n" +
             "FROM thought t\n" +
+            "LEFT JOIN tb_user u ON u.id = t.user_id\n" +
             "LEFT JOIN (\n" +
             "    SELECT original_thought , COUNT(*) comments_count\n" +
             "    FROM thought\n" +

@@ -18,6 +18,7 @@ import io.github.leocklaus.thoughtsapi.domain.models.User;
 import io.github.leocklaus.thoughtsapi.api.dto.ThoughtDTO;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,9 +44,24 @@ public class ThoughtService {
         return new ThoughtOutputDTO(thought);
     }
 
-    public Page<ThoughtProjection> getAllThoughtsPaged(Pageable pageable){
-        Page<ThoughtProjection> thoughts = repository.getThoughtsPaged(pageable);
+    public Page<ThoughtOutputDTOProjected> getAllThoughtsPaged(Pageable pageable){
+
+        //TODO: GET USER ID FROM TOKEN
+        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+
+        Page<ThoughtProjection> thoughtsProjected = repository.getThoughtsPaged(pageable);
+        List<Likes> thoughtsLikesByUser = likeRepository.findByUser(user);
+
+        Page<ThoughtOutputDTOProjected> thoughts = thoughtsProjected.map(thought -> {
+            boolean userHasLikedThought = checkIfUserHasLikedTheThought(thought.getUUID(), thoughtsLikesByUser);
+                var thoughtDTO =  new ThoughtOutputDTOProjected(thought);
+                thoughtDTO.setLikedByUser(userHasLikedThought);
+                return thoughtDTO;
+        });
+
+
         return thoughts;
+
     }
 
     private Thought findThoughtByIdOrThrowsNotFoundException(Long id){
@@ -150,5 +166,10 @@ public class ThoughtService {
 
     private Optional<Likes> getExistingLike(Thought thought, User user){
         return likeRepository.findByThoughtAndUser(thought, user);
+    }
+
+    private boolean checkIfUserHasLikedTheThought(String thoughtUUID, List<Likes> thoughtsLiked){
+        thoughtsLiked = thoughtsLiked.stream().filter(like -> like.getThought().getUuid() == thoughtUUID).toList();
+        return thoughtsLiked.size() == 0 ? false : true;
     }
 }

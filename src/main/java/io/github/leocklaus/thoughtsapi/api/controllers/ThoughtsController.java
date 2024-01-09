@@ -32,9 +32,9 @@ public class ThoughtsController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ThoughtProjection>> getAllThoughtsPaged(
+    public ResponseEntity<Page<ThoughtOutputDTOProjected>> getAllThoughtsPaged(
             @PageableDefault(size = 20, direction = Sort.Direction.DESC, sort = {"created_at"}) Pageable pageable){
-        Page<ThoughtProjection> thoughts = thoughtService.getAllThoughtsPaged(pageable);
+        Page<ThoughtOutputDTOProjected> thoughts = thoughtService.getAllThoughtsPaged(pageable);
         return ResponseEntity.ok(thoughts);
     }
 
