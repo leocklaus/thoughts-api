@@ -33,9 +33,9 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/{uuid}")
-    public ResponseEntity<UserOutputDTO> getUserById(@PathVariable String uuid){
-        UserOutputDTO user = userService.getUserByUuid(uuid);
+    @GetMapping("/{username}")
+    public ResponseEntity<UserOutputDTO> getUserByUsername(@PathVariable String username){
+        UserOutputDTO user = userService.getUserByUsername(username);
         return ResponseEntity.ok(user);
     }
 
@@ -68,6 +68,13 @@ public class UserController {
         Long currentUserId = 1L;
         UserOutputDTO user = userService.getUserById(currentUserId);
         return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/current/followingthoughts")
+    public ResponseEntity<Page<ThoughtOutputDTOProjected>> getFollowingUserThoughts(
+            @PageableDefault(size = 20, direction = Sort.Direction.DESC, sort = {"createdAt"}) Pageable pageable){
+        Page<ThoughtOutputDTOProjected> thoughtsProjection = thoughtService.getFollowingUserThougts(pageable);
+        return ResponseEntity.ok(thoughtsProjection);
     }
 
     @GetMapping("/current/likes")

@@ -19,6 +19,8 @@ public class UserOutputDTO {
     private String birthday;
     private Long follows;
     private Long followers;
+    private Long postsCount;
+    private boolean isLoggedUser;
 
     public UserOutputDTO(User user){
         this.id = user.getId();

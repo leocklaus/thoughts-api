@@ -26,8 +26,8 @@ public class ThoughtsController {
     private ThoughtService thoughtService;
 
     @GetMapping("/{uuid}")
-    public ResponseEntity<ThoughtOutputDTO> getThoughtByUuid(@PathVariable String uuid){
-        ThoughtOutputDTO thoughtDTO = thoughtService.getThoughtByUuid(uuid);
+    public ResponseEntity<ThoughtOutputDTOProjected> getThoughtByUuid(@PathVariable String uuid){
+        ThoughtOutputDTOProjected thoughtDTO = thoughtService.getThoughtByUuid(uuid);
         return ResponseEntity.ok(thoughtDTO);
     }
 
@@ -39,8 +39,8 @@ public class ThoughtsController {
     }
 
     @PostMapping
-    public ResponseEntity<ThoughtOutputDTO> saveThought(@RequestBody @Valid ThoughtDTO dto){
-        ThoughtOutputDTO thought = thoughtService.saveThought(dto);
+    public ResponseEntity<ThoughtOutputDTOProjected> saveThought(@RequestBody @Valid ThoughtDTO dto){
+        ThoughtOutputDTOProjected thought = thoughtService.saveThought(dto);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
@@ -50,10 +50,10 @@ public class ThoughtsController {
     }
 
     @GetMapping("/{uuid}/comments")
-    public ResponseEntity<Page<ThoughtOutputDTO>> getThoughComments(
+    public ResponseEntity<Page<ThoughtOutputDTOProjected>> getThoughComments(
             @PathVariable String uuid,
             @PageableDefault(size = 10, direction = Sort.Direction.DESC, sort = {"createdAt"}) Pageable pageable){
-        Page<ThoughtOutputDTO> comments = thoughtService.getCommentsByThoughtUuid(pageable, uuid);
+        Page<ThoughtOutputDTOProjected> comments = thoughtService.getCommentsByThoughtUuid(pageable, uuid);
         return ResponseEntity.ok(comments);
     }
 

@@ -2,6 +2,7 @@ package io.github.leocklaus.thoughtsapi.api.dto;
 
 import io.github.leocklaus.thoughtsapi.domain.models.Thought;
 import io.github.leocklaus.thoughtsapi.domain.models.ThoughtType;
+import io.github.leocklaus.thoughtsapi.domain.models.User;
 import io.github.leocklaus.thoughtsapi.domain.projections.ThoughtProjection;
 import lombok.*;
 
@@ -36,6 +37,20 @@ public class ThoughtOutputDTOProjected {
         this.createdAt = projection.getCREATEDAT();
         this.commentsCount = projection.getCOMMENTSCOUNT();
         this.likesCount = projection.getLIKESCOUNT();
+    }
+
+    public ThoughtOutputDTOProjected(ThoughtOutputDTO dto, User user){
+        this.uuid = dto.getUuid();
+        this.content = dto.getContent();
+        this.type = dto.getType().toString();
+        this.userUUID = dto.getUserUUID();
+        this.username = user.getUsername();
+        this.firstname = user.getFirstName();
+        this.lastname = user.getLastName();
+        this.createdAt = dto.getCreatedAt().toString();
+        this.commentsCount = 0;
+        this.likesCount = 0;
+        this.likedByUser = false;
     }
 
 }

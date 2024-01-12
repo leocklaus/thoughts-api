@@ -39,9 +39,20 @@ public class ThoughtService {
         return new ThoughtOutputDTO(thought);
     }
 
-    public ThoughtOutputDTO getThoughtByUuid(String uuid) {
+    public ThoughtOutputDTOProjected getThoughtByUuid(String uuid) {
+
         Thought thought = findThoughtByUuidOrThrowsNotFoundException(uuid);
-        return new ThoughtOutputDTO(thought);
+
+        ThoughtProjection thoughtProjected = repository.getThoughtsByUuid(uuid);
+
+        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+
+        Optional<Likes> thoughtsLikesByUser = likeRepository.findByUserAndThought(user.getId(), thought.getId());
+
+        ThoughtOutputDTOProjected thoughtDTO = new ThoughtOutputDTOProjected(thoughtProjected);
+        thoughtDTO.setLikedByUser(thoughtsLikesByUser.isPresent());
+
+        return thoughtDTO;
     }
 
     public Page<ThoughtOutputDTOProjected> getAllThoughtsPaged(Pageable pageable){
@@ -77,7 +88,7 @@ public class ThoughtService {
     }
 
     @Transactional()
-    public ThoughtOutputDTO saveThought(ThoughtDTO dto) {
+    public ThoughtOutputDTOProjected saveThought(ThoughtDTO dto) {
 
         //TODO: GET USER ID FROM TOKEN
         User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
@@ -91,14 +102,14 @@ public class ThoughtService {
 
         thought.setUser(user);
         thought = repository.save(thought);
-        return new ThoughtOutputDTO(thought);
+        return new ThoughtOutputDTOProjected(new ThoughtOutputDTO(thought), user);
     }
 
-    public Page<ThoughtOutputDTO> getCommentsByThoughtUuid(Pageable pageable, String uuid) {
+    public Page<ThoughtOutputDTOProjected> getCommentsByThoughtUuid(Pageable pageable, String uuid) {
         Thought thought = findThoughtByUuidOrThrowsNotFoundException(uuid);
-        Page<Thought> comments = repository.findByOriginalThought(thought, pageable);
+        Page<ThoughtProjection> comments = repository.findByOriginalAndType(thought.getId(), ThoughtType.REPLY.toString(), pageable);
         return comments
-                .map(ThoughtOutputDTO::new);
+                .map(ThoughtOutputDTOProjected::new);
     }
 
     public void addLikeToThought(String uuid) {
@@ -171,5 +182,23 @@ public class ThoughtService {
     private boolean checkIfUserHasLikedTheThought(String thoughtUUID, List<Likes> thoughtsLiked){
         thoughtsLiked = thoughtsLiked.stream().filter(like -> like.getThought().getUuid() == thoughtUUID).toList();
         return thoughtsLiked.size() == 0 ? false : true;
+    }
+
+    public Page<ThoughtOutputDTOProjected> getFollowingUserThougts(Pageable pageable) {
+        //TODO: GET USER ID FROM TOKEN
+        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+
+        Page<ThoughtProjection> thoughtsDTO = repository.getThoughtsFollowedByUser(user.getId(), pageable);
+
+        List<Likes> thoughtsLikesByUser = likeRepository.findByUser(user);
+
+        Page<ThoughtOutputDTOProjected> thoughts = thoughtsDTO.map(thought -> {
+            boolean userHasLikedThought = checkIfUserHasLikedTheThought(thought.getUUID(), thoughtsLikesByUser);
+            var thoughtDTO =  new ThoughtOutputDTOProjected(thought);
+            thoughtDTO.setLikedByUser(userHasLikedThought);
+            return thoughtDTO;
+        });
+
+        return thoughts;
     }
 }

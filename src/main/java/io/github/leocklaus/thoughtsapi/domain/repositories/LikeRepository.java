@@ -42,4 +42,8 @@ public interface LikeRepository extends JpaRepository<Likes, Long> {
 
     List<Likes> findByUser(User user);
 
+    @Query(value = "SELECT * FROM tb_like l WHERE l.user_id=:userId AND l.thought_id=:thoughtId",
+            nativeQuery = true)
+    Optional<Likes> findByUserAndThought(@Param("userId") Long userId, @Param("thoughtId") Long thoughtId);
+
 }

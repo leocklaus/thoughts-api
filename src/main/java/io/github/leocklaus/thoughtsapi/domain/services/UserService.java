@@ -8,6 +8,7 @@ import io.github.leocklaus.thoughtsapi.domain.exceptions.UserWrongPasswordExcept
 import io.github.leocklaus.thoughtsapi.domain.models.Follower;
 import io.github.leocklaus.thoughtsapi.domain.models.User;
 import io.github.leocklaus.thoughtsapi.domain.repositories.FollowerRepository;
+import io.github.leocklaus.thoughtsapi.domain.repositories.ThoughtRepository;
 import io.github.leocklaus.thoughtsapi.domain.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class UserService {
 
     @Autowired
     private FollowerRepository followerRepository;
+
+    @Autowired
+    private ThoughtRepository thoughtRepository;
 
     public List<UserOutputDTO> getAllUsers() {
         List<User> users = repository.findAll();
@@ -139,5 +143,27 @@ public class UserService {
 
     private Long getLoggedUserId(){
         return 1L;
+    }
+
+    public UserOutputDTO getUserByUsername(String username) {
+        //get logged user
+        User loggedUser = getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+        Optional<User> user = repository.findByUsername(username);
+
+        if(user.isEmpty()){
+            throw new UserNotFoundException("User not found with username: " + username);
+        }
+
+        Long follows = followerRepository.countByFollower(user.get());
+        Long followed = followerRepository.countByFollowed(user.get());
+        Long thoughtCount = thoughtRepository.countByUser(user.get());
+
+        UserOutputDTO userDTO = new UserOutputDTO(user.get());
+        userDTO.setFollowers(followed);
+        userDTO.setFollows(follows);
+        userDTO.setLoggedUser(loggedUser.getUsername() == user.get().getUsername() ? true: false);
+        userDTO.setPostsCount(thoughtCount);
+
+        return userDTO;
     }
 }
