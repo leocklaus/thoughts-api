@@ -3,12 +3,14 @@ package io.github.leocklaus.thoughtsapi.domain.services;
 import io.github.leocklaus.thoughtsapi.api.dto.ThoughtOutputDTO;
 import io.github.leocklaus.thoughtsapi.api.dto.ThoughtOutputDTOProjected;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.ThoughtNotFoundException;
+import io.github.leocklaus.thoughtsapi.domain.exceptions.UserNotFoundException;
 import io.github.leocklaus.thoughtsapi.domain.models.Likes;
 import io.github.leocklaus.thoughtsapi.domain.models.Thought;
 import io.github.leocklaus.thoughtsapi.domain.models.ThoughtType;
 import io.github.leocklaus.thoughtsapi.domain.projections.ThoughtProjection;
 import io.github.leocklaus.thoughtsapi.domain.repositories.LikeRepository;
 import io.github.leocklaus.thoughtsapi.domain.repositories.ThoughtRepository;
+import io.github.leocklaus.thoughtsapi.domain.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,12 @@ public class ThoughtService {
 
     @Autowired
     private LikeRepository likeRepository;
+
+    @Autowired
+    private AuthorizationService authorizationService;
+
+    @Autowired
+    private UserRepository userRepository;
 
 
     public ThoughtOutputDTO getThoughtById(Long id) {
@@ -91,7 +99,12 @@ public class ThoughtService {
     public ThoughtOutputDTOProjected saveThought(ThoughtDTO dto) {
 
         //TODO: GET USER ID FROM TOKEN
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+        String authenticatedUsername = authorizationService.getAuthenticatedUsername();
+        Optional<User> user = userRepository.findByUsername(authenticatedUsername);
+
+        if(user.isEmpty()){
+            throw new UserNotFoundException("User not found with username: " + authenticatedUsername);
+        }
 
         Thought thought = new Thought(dto);
 
@@ -100,9 +113,9 @@ public class ThoughtService {
             thought.setOriginalThought(originalThought);
         }
 
-        thought.setUser(user);
+        thought.setUser(user.get());
         thought = repository.save(thought);
-        return new ThoughtOutputDTOProjected(new ThoughtOutputDTO(thought), user);
+        return new ThoughtOutputDTOProjected(new ThoughtOutputDTO(thought), user.get());
     }
 
     public Page<ThoughtOutputDTOProjected> getCommentsByThoughtUuid(Pageable pageable, String uuid) {
@@ -195,6 +208,24 @@ public class ThoughtService {
         Page<ThoughtOutputDTOProjected> thoughts = thoughtsDTO.map(thought -> {
             boolean userHasLikedThought = checkIfUserHasLikedTheThought(thought.getUUID(), thoughtsLikesByUser);
             var thoughtDTO =  new ThoughtOutputDTOProjected(thought);
+            thoughtDTO.setLikedByUser(userHasLikedThought);
+            return thoughtDTO;
+        });
+
+        return thoughts;
+    }
+
+    public Page<ThoughtOutputDTOProjected> searchThought(String query, Pageable pageable) {
+
+        //TODO: GET USER ID FROM TOKEN
+        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+
+        Page<ThoughtProjection> thoughtProjections = repository.searchThoughtByContent(query.toLowerCase(), pageable);
+        List<Likes> thoughtsLikesByUser = likeRepository.findByUser(user);
+
+        Page<ThoughtOutputDTOProjected> thoughts = thoughtProjections.map(thought -> {
+            boolean userHasLikedThought = checkIfUserHasLikedTheThought(thought.getUUID(), thoughtsLikesByUser);
+            var thoughtDTO = new ThoughtOutputDTOProjected(thought);
             thoughtDTO.setLikedByUser(userHasLikedThought);
             return thoughtDTO;
         });

@@ -25,6 +25,8 @@ public class UserInputDTO {
     private String birthday;
     @NotBlank @Size(min = 6)
     private String password;
+    @NotBlank
+    private String bio;
 
     public UserInputDTO(User user){
         this.id = user.getId();

@@ -103,6 +103,22 @@ public interface ThoughtRepository extends JpaRepository<Thought, Long> {
             nativeQuery = true)
     Page<ThoughtProjection> getThoughtsFilteredByType(@Param("type") String type, Pageable pageable);
 
+    @Query(value = "SELECT t.uuid, t.type, t.created_at as createdAt, t.content, u.uuid as userUUID, u.username as username, u.first_name as firstName, u.last_name as lastName, COALESCE(r.comments_count, 0) commentsCount, COALESCE(l.likes_count, 0) likesCount\n" +
+            "FROM thought t\n" +
+            "LEFT JOIN tb_user u ON u.id = t.user_id\n" +
+            "LEFT JOIN (\n" +
+            "    SELECT original_thought , COUNT(*) comments_count\n" +
+            "    FROM thought\n" +
+            "    GROUP BY original_thought \n" +
+            ") r ON r.original_thought = t.id\n" +
+            "LEFT JOIN (\n" +
+            "SELECT thought_id, COUNT(*) likes_count\n" +
+            "FROM tb_like\n" +
+            "GROUP BY thought_id\n" +
+            ") l ON l.thought_id = t.id WHERE LOWER(t.content) LIKE %:query%",
+            nativeQuery = true)
+    Page<ThoughtProjection> searchThoughtByContent(@Param("query") String query, Pageable pageable);
+
     @Query(value = "select t.id, t.user_id as userId, t.content, t.type, t.uuid, t.created_at as createdAt, t.original_thought as originalThought,  COALESCE(l.likes_count, 0) as likes_count, COALESCE(c.comments_count, 0) as comments_count from follower f left join (thought t left join (\n" +
             "SELECT thought_id, COUNT(*) likes_count FROM tb_like GROUP BY thought_id) l on l.thought_id = t.id) left join (\n" +
             "SELECT original_thought , COUNT(*) comments_count FROM thought GROUP BY original_thought) c on c.original_thought = t.id\n" +

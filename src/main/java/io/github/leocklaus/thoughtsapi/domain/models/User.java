@@ -6,8 +6,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,7 +22,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tb_user")
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -27,6 +31,7 @@ public class User {
     @Column(nullable = false)
     private String username;
     @Column(nullable = false)
+    private String login;
     private String email;
     @Column(nullable = false)
     private String firstName;
@@ -36,6 +41,11 @@ public class User {
     private String birthday;
     @Column(nullable = false)
     private String password;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String bio;
+    private String profilePicture;
+    private String coverPicture;
+    private UserRoles roles;
 
     public User(UserInputDTO dto){
         this.id = dto.getId();
@@ -46,10 +56,42 @@ public class User {
         this.lastName = dto.getLastName();
         this.birthday = dto.getBirthday();
         this.password = dto.getPassword();
+        this.bio = dto.getBio();
     }
 
     @PrePersist
     public void generateCode(){
+
         setUuid(UUID.randomUUID().toString());
+        setRoles(UserRoles.USER);
+        setLogin(this.getUsername());
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if(this.roles == UserRoles.ADMIN){
+            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
+        }
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }

@@ -45,7 +45,7 @@ public class UserController {
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
-                .buildAndExpand(user.getId()).toUri();
+                .buildAndExpand(user.getUuid()).toUri();
 
         return ResponseEntity.created(uri).body(user);
     }
@@ -111,6 +111,11 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<UserOutputDTO>> searchUser(@RequestParam String query, Pageable pageable){
+        Page<UserOutputDTO> users = userService.searchUsers(query, pageable);
+        return ResponseEntity.ok(users);
+    }
 
 
 }

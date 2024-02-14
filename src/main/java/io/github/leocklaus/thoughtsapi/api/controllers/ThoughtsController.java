@@ -25,6 +25,12 @@ public class ThoughtsController {
     @Autowired
     private ThoughtService thoughtService;
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<ThoughtOutputDTOProjected>> searchThoughts(@RequestParam String query, Pageable pageable){
+        Page<ThoughtOutputDTOProjected> thoughtDTO = thoughtService.searchThought(query, pageable);
+        return ResponseEntity.ok(thoughtDTO);
+    }
+
     @GetMapping("/{uuid}")
     public ResponseEntity<ThoughtOutputDTOProjected> getThoughtByUuid(@PathVariable String uuid){
         ThoughtOutputDTOProjected thoughtDTO = thoughtService.getThoughtByUuid(uuid);

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserOutputDTO {
 
-    private Long id;
     private String uuid;
     private String username;
     private String email;
@@ -21,15 +20,17 @@ public class UserOutputDTO {
     private Long followers;
     private Long postsCount;
     private boolean isLoggedUser;
+    private boolean followedByLoggedUser;
+    private String bio;
 
     public UserOutputDTO(User user){
-        this.id = user.getId();
         this.uuid = user.getUuid();
         this.username = user.getUsername();
         this.email = user.getEmail();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
         this.birthday = user.getBirthday();
+        this.bio = user.getBio();
     }
 
 }

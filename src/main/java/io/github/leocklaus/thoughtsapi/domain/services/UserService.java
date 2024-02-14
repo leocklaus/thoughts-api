@@ -12,6 +12,9 @@ import io.github.leocklaus.thoughtsapi.domain.repositories.ThoughtRepository;
 import io.github.leocklaus.thoughtsapi.domain.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,6 +42,27 @@ public class UserService {
     public UserOutputDTO getUserById(Long id) {
         User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
         return new UserOutputDTO(user);
+    }
+
+    public Page<UserOutputDTO> searchUsers(String query, Pageable pageable) {
+
+        //logged user
+        User loggedUser = getUserByIdOrThrowsExceptionIfUserNotExists(getLoggedUserId());
+
+        //followers
+        List<Follower> follows = followerRepository.findByFollower(loggedUser);
+
+        Page<UserOutputDTO> users = repository.findUserContaining(query.toLowerCase(), pageable)
+                .map(UserOutputDTO::new)
+                .map(user -> {
+                    user.setLoggedUser(loggedUser.getUsername() == user.getUsername() ? true: false);
+                    user.setFollowedByLoggedUser(checkFollowedByLoggedUser(follows, user));
+                    return user;
+                });
+
+
+        return users;
+
     }
 
     public UserOutputDTO getUserByUuid(String uuid) {
@@ -109,7 +133,10 @@ public class UserService {
         return user;
     }
 
-    private void setPasswordHash(User user){    }
+    private void setPasswordHash(User user){
+        String encryptedPassword = new BCryptPasswordEncoder().encode(user.getPassword());
+        user.setPassword(encryptedPassword);
+    }
 
     @Transactional
     public void followUser(String userToFollowUuid) {
@@ -139,6 +166,14 @@ public class UserService {
 
     private boolean isAlreadyFollowing(User user, User userToBeFollowed){
         return getFollow(user,userToBeFollowed).isPresent()? true: false;
+    }
+
+    private boolean checkFollowedByLoggedUser(List<Follower> loggedUserFollows, UserOutputDTO user){
+        loggedUserFollows = loggedUserFollows.stream()
+                        .filter(follow -> follow.getFollowed().getUuid() == user.getUuid())
+                                .toList();
+
+        return loggedUserFollows.size() == 0 ? false : true;
     }
 
     private Long getLoggedUserId(){
