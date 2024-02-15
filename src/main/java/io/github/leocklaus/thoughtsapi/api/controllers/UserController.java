@@ -45,7 +45,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<String> saveUser(@RequestBody @Valid UserInputDTO dto){
+    public ResponseEntity<RegisterResponseDTO> saveUser(@RequestBody @Valid UserInputDTO dto){
         var user = userService.saveUser(dto);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri()
@@ -54,7 +54,7 @@ public class UserController {
 
         var token = tokenService.generateToken(user);
 
-        return ResponseEntity.created(uri).body(token);
+        return ResponseEntity.created(uri).body(new RegisterResponseDTO(token));
     }
 
     @PutMapping("/updatepassword")
