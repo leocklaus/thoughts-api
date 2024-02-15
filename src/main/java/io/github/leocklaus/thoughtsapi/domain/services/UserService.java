@@ -81,11 +81,11 @@ public class UserService {
     }
 
     @Transactional
-    public UserOutputDTO saveUser(UserInputDTO dto) {
+    public User saveUser(UserInputDTO dto) {
         User user = new User(dto);
         setPasswordHash(user);
         user = repository.save(user);
-        return new UserOutputDTO(user);
+        return user;
     }
 
     @Transactional
