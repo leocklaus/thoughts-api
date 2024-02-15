@@ -53,7 +53,7 @@ public class ThoughtService {
 
         ThoughtProjection thoughtProjected = repository.getThoughtsByUuid(uuid);
 
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         Optional<Likes> thoughtsLikesByUser = likeRepository.findByUserAndThought(user.getId(), thought.getId());
 
@@ -65,8 +65,7 @@ public class ThoughtService {
 
     public Page<ThoughtOutputDTOProjected> getAllThoughtsPaged(Pageable pageable){
 
-        //TODO: GET USER ID FROM TOKEN
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         Page<ThoughtProjection> thoughtsProjected = repository.getThoughtsPaged(pageable);
         List<Likes> thoughtsLikesByUser = likeRepository.findByUser(user);
@@ -98,13 +97,7 @@ public class ThoughtService {
     @Transactional()
     public ThoughtOutputDTOProjected saveThought(ThoughtDTO dto) {
 
-        //TODO: GET USER ID FROM TOKEN
-        String authenticatedUsername = authorizationService.getAuthenticatedUsername();
-        Optional<User> user = userRepository.findByUsername(authenticatedUsername);
-
-        if(user.isEmpty()){
-            throw new UserNotFoundException("User not found with username: " + authenticatedUsername);
-        }
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         Thought thought = new Thought(dto);
 
@@ -113,9 +106,9 @@ public class ThoughtService {
             thought.setOriginalThought(originalThought);
         }
 
-        thought.setUser(user.get());
+        thought.setUser(user);
         thought = repository.save(thought);
-        return new ThoughtOutputDTOProjected(new ThoughtOutputDTO(thought), user.get());
+        return new ThoughtOutputDTOProjected(new ThoughtOutputDTO(thought), user);
     }
 
     public Page<ThoughtOutputDTOProjected> getCommentsByThoughtUuid(Pageable pageable, String uuid) {
@@ -126,10 +119,10 @@ public class ThoughtService {
     }
 
     public void addLikeToThought(String uuid) {
+
         Thought thought = findThoughtByUuidOrThrowsNotFoundException(uuid);
 
-        //TODO: GET USER ID FROM TOKEN
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         Likes likes = new Likes(null, thought, user, LocalDateTime.now());
 
@@ -142,8 +135,7 @@ public class ThoughtService {
     public void deleteLike(String uuid) {
         Thought thought = findThoughtByUuidOrThrowsNotFoundException(uuid);
 
-        //TODO: GET USER ID FROM TOKEN
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         if(likeAlreadyExists(thought, user)){
             likeRepository.deleteByThoughtAndUser(thought, user);
@@ -153,8 +145,8 @@ public class ThoughtService {
 
     @Transactional
     public Page<ThoughtProjection> getThoughtsLikedByUser(Pageable pageable){
-        //TODO: GET USER ID FROM TOKEN
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         //Page<Likes> likes = likeRepository.findAllByUser(user, pageable);
 
@@ -164,8 +156,8 @@ public class ThoughtService {
     }
 
     public Page<ThoughtProjection> getUserReplies(Pageable pageable){
-        //TODO: GET USER ID FROM TOKEN
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         Page<ThoughtProjection> replies = repository.findByUserAndType(user.getId(), ThoughtType.REPLY.toString(), pageable);
 
@@ -173,8 +165,8 @@ public class ThoughtService {
     }
 
     public Page<ThoughtProjection> getUserThoughts(Pageable pageable){
-        //TODO: GET USER ID FROM TOKEN
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         Page<ThoughtProjection> replies = repository.findByUserAndType(user.getId(), ThoughtType.ORIGINAL.toString(), pageable);
 
@@ -198,8 +190,8 @@ public class ThoughtService {
     }
 
     public Page<ThoughtOutputDTOProjected> getFollowingUserThougts(Pageable pageable) {
-        //TODO: GET USER ID FROM TOKEN
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         Page<ThoughtProjection> thoughtsDTO = repository.getThoughtsFollowedByUser(user.getId(), pageable);
 
@@ -217,8 +209,7 @@ public class ThoughtService {
 
     public Page<ThoughtOutputDTOProjected> searchThought(String query, Pageable pageable) {
 
-        //TODO: GET USER ID FROM TOKEN
-        User user = userService.getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+        User user = userService.getLoggedUserOrThrowsExceptionIfNotExists();
 
         Page<ThoughtProjection> thoughtProjections = repository.searchThoughtByContent(query.toLowerCase(), pageable);
         List<Likes> thoughtsLikesByUser = likeRepository.findByUser(user);

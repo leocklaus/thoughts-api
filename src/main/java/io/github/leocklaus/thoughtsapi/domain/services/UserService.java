@@ -3,6 +3,7 @@ package io.github.leocklaus.thoughtsapi.domain.services;
 import io.github.leocklaus.thoughtsapi.api.dto.UserInputDTO;
 import io.github.leocklaus.thoughtsapi.api.dto.UserOutputDTO;
 import io.github.leocklaus.thoughtsapi.api.dto.UserPasswordDTO;
+import io.github.leocklaus.thoughtsapi.domain.exceptions.NotAuthorizedException;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.UserNotFoundException;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.UserWrongPasswordException;
 import io.github.leocklaus.thoughtsapi.domain.models.Follower;
@@ -11,6 +12,7 @@ import io.github.leocklaus.thoughtsapi.domain.repositories.FollowerRepository;
 import io.github.leocklaus.thoughtsapi.domain.repositories.ThoughtRepository;
 import io.github.leocklaus.thoughtsapi.domain.repositories.UserRepository;
 import jakarta.transaction.Transactional;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +34,9 @@ public class UserService {
     @Autowired
     private ThoughtRepository thoughtRepository;
 
+    @Autowired
+    private AuthorizationService authorizationService;
+
     public List<UserOutputDTO> getAllUsers() {
         List<User> users = repository.findAll();
         return users
@@ -47,7 +52,7 @@ public class UserService {
     public Page<UserOutputDTO> searchUsers(String query, Pageable pageable) {
 
         //logged user
-        User loggedUser = getUserByIdOrThrowsExceptionIfUserNotExists(getLoggedUserId());
+        User loggedUser = getLoggedUserOrThrowsExceptionIfNotExists();
 
         //followers
         List<Follower> follows = followerRepository.findByFollower(loggedUser);
@@ -85,15 +90,21 @@ public class UserService {
 
     @Transactional
     public UserOutputDTO updateUser(UserInputDTO dto, Long id) {
-        User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
+
+        User user = getLoggedUserOrThrowsExceptionIfNotExists();
+
+        if(id != user.getId()){
+            throw new NotAuthorizedException();
+        }
+
         user = fromDTOToUser(dto, user);
         user = repository.save(user);
         return new UserOutputDTO(user);
     }
 
     @Transactional
-    public void updateUserPassword(Long id, UserPasswordDTO dto){
-        User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
+    public void updateUserPassword(UserPasswordDTO dto){
+        User user = getLoggedUserOrThrowsExceptionIfNotExists();
 
         if(user.getPassword().equals(dto.getCurrentPassword())){
             user.setPassword(dto.getNewPassword());
@@ -105,7 +116,12 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
-        User user = getUserByIdOrThrowsExceptionIfUserNotExists(id);
+        User user = getLoggedUserOrThrowsExceptionIfNotExists();
+
+        if(id != user.getId()){
+            throw new NotAuthorizedException();
+        }
+
         repository.delete(user);
     }
 
@@ -140,8 +156,7 @@ public class UserService {
 
     @Transactional
     public void followUser(String userToFollowUuid) {
-        Long userId = getLoggedUserId();
-        User user = getUserByIdOrThrowsExceptionIfUserNotExists(userId);
+        User user = getLoggedUserOrThrowsExceptionIfNotExists();
         User userToFollow = getUserByUuidOrThrowsExceptionIfUserNotExists(userToFollowUuid);
         if(!isAlreadyFollowing(user, userToFollow)){
             Follower follower = new Follower(null, userToFollow, user);
@@ -151,8 +166,7 @@ public class UserService {
 
     @Transactional
     public void unfollowUser(String userBeingFollowedUUID) {
-        Long userId = getLoggedUserId();
-        User user = getUserByIdOrThrowsExceptionIfUserNotExists(userId);
+        User user = getLoggedUserOrThrowsExceptionIfNotExists();
         User userBeingFollowed = getUserByUuidOrThrowsExceptionIfUserNotExists(userBeingFollowedUUID);
         if(isAlreadyFollowing(user, userBeingFollowed)){
             followerRepository.deleteByFollowedAndFollower(userBeingFollowed, user);
@@ -176,13 +190,20 @@ public class UserService {
         return loggedUserFollows.size() == 0 ? false : true;
     }
 
-    private Long getLoggedUserId(){
-        return 1L;
+    public User getLoggedUserOrThrowsExceptionIfNotExists(){
+        String authenticatedUsername = authorizationService.getAuthenticatedUsername();
+        Optional<User> user = repository.findByUsername(authenticatedUsername);
+
+        if(user.isEmpty()){
+            throw new UserNotFoundException("User not found with username: " + authenticatedUsername);
+        }
+
+        return user.get();
     }
 
     public UserOutputDTO getUserByUsername(String username) {
         //get logged user
-        User loggedUser = getUserByIdOrThrowsExceptionIfUserNotExists(1L);
+        User loggedUser = getLoggedUserOrThrowsExceptionIfNotExists();
         Optional<User> user = repository.findByUsername(username);
 
         if(user.isEmpty()){
