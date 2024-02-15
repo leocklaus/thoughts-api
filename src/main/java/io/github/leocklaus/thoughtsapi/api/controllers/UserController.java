@@ -1,6 +1,8 @@
 package io.github.leocklaus.thoughtsapi.api.controllers;
 
 import io.github.leocklaus.thoughtsapi.api.dto.*;
+import io.github.leocklaus.thoughtsapi.config.security.TokenService;
+import io.github.leocklaus.thoughtsapi.domain.models.User;
 import io.github.leocklaus.thoughtsapi.domain.projections.ThoughtProjection;
 import io.github.leocklaus.thoughtsapi.domain.services.ThoughtService;
 import io.github.leocklaus.thoughtsapi.domain.services.UserService;
@@ -27,6 +29,9 @@ public class UserController {
     @Autowired
     private ThoughtService thoughtService;
 
+    @Autowired
+    private TokenService tokenService;
+
     @GetMapping
     public ResponseEntity<List<UserOutputDTO>> getAll(){
         List<UserOutputDTO> users = userService.getAllUsers();
@@ -46,6 +51,8 @@ public class UserController {
         URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
                 .buildAndExpand(user.getUuid()).toUri();
+
+        var token = tokenService.generateToken(user);
 
         return ResponseEntity.created(uri).body(user);
     }
