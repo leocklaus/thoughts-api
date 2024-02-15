@@ -1,8 +1,10 @@
 package io.github.leocklaus.thoughtsapi.api.exceptionhandler;
 
+import io.github.leocklaus.thoughtsapi.domain.exceptions.NotAuthorizedException;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.ThoughtNotFoundException;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.UserNotFoundException;
 import io.github.leocklaus.thoughtsapi.domain.exceptions.UserWrongPasswordException;
+import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -48,6 +50,18 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<?> handleThoughtNotFoundException(ThoughtNotFoundException ex, WebRequest request){
         var status = HttpStatus.NOT_FOUND;
         var exceptionType = ExceptionType.THOUGHT_NOT_FOUND;
+        String detail = ex.getMessage();
+        ExceptionModel exceptionModel = exceptionBuilder(status, exceptionType, detail)
+                .userMessage(detail)
+                .build();
+
+        return handleExceptionInternal(ex, exceptionModel, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(NotAuthorizedException.class)
+    public ResponseEntity<?> handleNotAuthorizedException(NotAuthorizedException ex, WebRequest request){
+        var status = HttpStatus.UNAUTHORIZED;
+        var exceptionType = ExceptionType.NOT_AUTHORIZED;
         String detail = ex.getMessage();
         ExceptionModel exceptionModel = exceptionBuilder(status, exceptionType, detail)
                 .userMessage(detail)
