@@ -28,10 +28,11 @@ public class User implements UserDetails {
     @EqualsAndHashCode.Include
     private Long id;
     private String uuid;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String username;
     @Column(nullable = false)
     private String login;
+    @Column(unique = true, nullable = false)
     private String email;
     @Column(nullable = false)
     private String firstName;

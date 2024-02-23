@@ -54,7 +54,7 @@ public class UserController {
 
         var token = tokenService.generateToken(user);
 
-        return ResponseEntity.created(uri).body(new RegisterResponseDTO(token));
+        return ResponseEntity.created(uri).body(new RegisterResponseDTO(token, user.getUsername()));
     }
 
     @PutMapping("/updatepassword")
